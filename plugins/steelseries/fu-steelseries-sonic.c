@@ -1043,7 +1043,7 @@ fu_steelseries_sonic_prepare_firmware_chip(FuDevice *device,
 					&checksum,
 					G_LITTLE_ENDIAN,
 					error))
-		return FALSE;
+		return NULL;
 	checksum_tmp = fu_common_crc32(g_bytes_get_data(blob, NULL),
 				       g_bytes_get_size(blob) - sizeof(checksum_tmp));
 	checksum_tmp = ~checksum_tmp;
@@ -1056,7 +1056,7 @@ fu_steelseries_sonic_prepare_firmware_chip(FuDevice *device,
 				    chip,
 				    checksum_tmp,
 				    checksum);
-			return FALSE;
+			return NULL;
 		}
 		g_debug("ignoring checksum mismatch, got 0x%08x, expected 0x%08x",
 			checksum_tmp,
