@@ -1007,8 +1007,8 @@ fu_steelseries_sonic_prepare_firmware(FuDevice *device,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {
-	FuFirmware *firmware_chip;
 	SteelseriesSonicChip chip;
+	FuFirmware *firmware_chip;
 	gsize offset;
 	gsize size;
 	g_autoptr(FuFirmware) firmware = fu_firmware_new();
