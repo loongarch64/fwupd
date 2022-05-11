@@ -950,30 +950,24 @@ fu_steelseries_sonic_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
-static FuFirmware *
-fu_steelseries_sonic_prepare_firmware_chip(FuDevice *device,
-					   SteelseriesSonicChip chip,
-					   GBytes *fw,
-					   gsize offset,
-					   gsize size,
-					   FwupdInstallFlags flags,
-					   GError **error)
+static gboolean
+fu_steelseries_sonic_parse_firmware(FuFirmware *firmware, FwupdInstallFlags flags, GError **error)
 {
 	guint32 checksum_tmp;
 	guint32 checksum;
-	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GBytes) blob = NULL;
 
-	blob = fu_common_bytes_new_offset(fw, offset, size, error);
+	blob = fu_firmware_get_bytes(firmware, error);
 	if (blob == NULL)
-		return NULL;
+		return FALSE;
+
 	if (!fu_common_read_uint32_safe(g_bytes_get_data(blob, NULL),
 					g_bytes_get_size(blob),
 					g_bytes_get_size(blob) - sizeof(checksum),
 					&checksum,
 					G_LITTLE_ENDIAN,
 					error))
-		return NULL;
+		return FALSE;
 	checksum_tmp = fu_common_crc32(g_bytes_get_data(blob, NULL),
 				       g_bytes_get_size(blob) - sizeof(checksum_tmp));
 	checksum_tmp = ~checksum_tmp;
@@ -982,23 +976,21 @@ fu_steelseries_sonic_prepare_firmware_chip(FuDevice *device,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
-				    "checksum mismatch for chip %u, got 0x%08x, expected 0x%08x",
-				    chip,
+				    "checksum mismatch for %s, got 0x%08x, expected 0x%08x",
+				    fu_firmware_get_id(firmware),
 				    checksum_tmp,
 				    checksum);
-			return NULL;
+			return FALSE;
 		}
 		g_debug("ignoring checksum mismatch, got 0x%08x, expected 0x%08x",
 			checksum_tmp,
 			checksum);
 	}
 
-	firmware = fu_firmware_new_from_bytes(blob);
-	fu_firmware_set_id(firmware, STEELSERIES_SONIC_FIRMWARE_ID[chip]);
 	fu_firmware_add_flag(firmware, FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 
 	/* success */
-	return g_steal_pointer(&firmware);
+	return TRUE;
 }
 
 static FuFirmware *
@@ -1008,70 +1000,39 @@ fu_steelseries_sonic_prepare_firmware(FuDevice *device,
 				      GError **error)
 {
 	SteelseriesSonicChip chip;
-	FuFirmware *firmware_chip;
-	gsize offset;
-	gsize size;
-	g_autoptr(FuFirmware) firmware = fu_firmware_new();
-	g_autoptr(FuFirmware) firmware_nordic = NULL;
-	g_autoptr(FuFirmware) firmware_holtek = NULL;
-	g_autoptr(FuFirmware) firmware_mouse = NULL;
+	g_autoptr(FuFirmware) firmware_chip = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
 
-	/* TODO: Use FuArchive */
-	if (g_bytes_get_size(fw) < fu_device_get_firmware_size_min(device)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "firmware is too small");
-		return NULL;
-	}
-
-	/* nordic */
-	chip = STEELSERIES_SONIC_CHIP_NORDIC;
-	offset = 0;
-	size = STEELSERIES_SONIC_FIRMWARE_SIZE[chip];
-	firmware_chip = fu_steelseries_sonic_prepare_firmware_chip(device,
-								   chip,
-								   fw,
-								   offset,
-								   size,
-								   flags,
-								   error);
-	if (firmware_chip == NULL)
-		return NULL;
-	fu_firmware_add_image(firmware, firmware_chip);
-	firmware_nordic = firmware_chip;
-
-	/* holtek */
-	chip = STEELSERIES_SONIC_CHIP_HOLTEK;
-	offset += size;
-	size = STEELSERIES_SONIC_FIRMWARE_SIZE[chip];
-	firmware_chip = fu_steelseries_sonic_prepare_firmware_chip(device,
-								   chip,
-								   fw,
-								   offset,
-								   size,
-								   flags,
-								   error);
-	if (firmware_chip == NULL)
-		return NULL;
-	fu_firmware_add_image(firmware, firmware_chip);
-	firmware_holtek = firmware_chip;
+	firmware = fu_archive_firmware_new();
+	if (!fu_firmware_parse(firmware, fw, flags, error))
+		return FALSE;
 
 	/* mouse */
 	chip = STEELSERIES_SONIC_CHIP_MOUSE;
-	offset += size;
-	size = STEELSERIES_SONIC_FIRMWARE_SIZE[chip];
-	firmware_chip = fu_steelseries_sonic_prepare_firmware_chip(device,
-								   chip,
-								   fw,
-								   offset,
-								   size,
-								   flags,
-								   error);
+	firmware_chip =
+	    fu_firmware_get_image_by_id(firmware, STEELSERIES_SONIC_FIRMWARE_ID[chip], error);
 	if (firmware_chip == NULL)
 		return NULL;
-	fu_firmware_add_image(firmware, firmware_chip);
-	firmware_mouse = firmware_chip;
+	if (!fu_steelseries_sonic_parse_firmware(firmware_chip, flags, error))
+		return FALSE;
+
+	/* nordic */
+	chip = STEELSERIES_SONIC_CHIP_NORDIC;
+	firmware_chip =
+	    fu_firmware_get_image_by_id(firmware, STEELSERIES_SONIC_FIRMWARE_ID[chip], error);
+	if (firmware_chip == NULL)
+		return NULL;
+	if (!fu_steelseries_sonic_parse_firmware(firmware_chip, flags, error))
+		return FALSE;
+
+	/* holtek */
+	chip = STEELSERIES_SONIC_CHIP_HOLTEK;
+	firmware_chip =
+	    fu_firmware_get_image_by_id(firmware, STEELSERIES_SONIC_FIRMWARE_ID[chip], error);
+	if (firmware_chip == NULL)
+		return NULL;
+	if (!fu_steelseries_sonic_parse_firmware(firmware_chip, flags, error))
+		return FALSE;
 
 	/* success */
 	return g_steal_pointer(&firmware);
