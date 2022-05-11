@@ -221,8 +221,6 @@ fu_steelseries_sonic_read_from_ram(FuDevice *device,
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		const guint16 offset = fu_chunk_get_address(chk);
-		const guint16 size = fu_chunk_get_data_sz(chk);
 
 		if (!fu_common_write_uint16_safe(data,
 						 sizeof(data),
@@ -235,7 +233,7 @@ fu_steelseries_sonic_read_from_ram(FuDevice *device,
 		if (!fu_common_write_uint16_safe(data,
 						 sizeof(data),
 						 STEELSERIES_SONIC_READ_FROM_RAM_OFFSET_OFFSET,
-						 offset,
+						 fu_chunk_get_address(chk),
 						 G_LITTLE_ENDIAN,
 						 error))
 			return FALSE;
@@ -243,7 +241,7 @@ fu_steelseries_sonic_read_from_ram(FuDevice *device,
 		if (!fu_common_write_uint16_safe(data,
 						 sizeof(data),
 						 STEELSERIES_SONIC_READ_FROM_RAM_SIZE_OFFSET,
-						 size,
+						 fu_chunk_get_data_sz(chk),
 						 G_LITTLE_ENDIAN,
 						 error))
 			return FALSE;
