@@ -179,7 +179,7 @@ fu_steelseries_sonic_battery_state(FuDevice *device, guint16 *value, GError **er
 {
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
 	const guint16 opcode = 0xAAU;
-	const guint8 bat_mode = 1U; /* percentage */
+	const guint8 bat_mode = 0x01U; /* percentage */
 
 	if (!fu_common_write_uint8_safe(data, sizeof(data), 0x0, opcode, error))
 		return FALSE;
