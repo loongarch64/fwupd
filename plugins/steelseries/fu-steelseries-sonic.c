@@ -673,7 +673,7 @@ fu_steelseries_sonic_attach(FuDevice *device, FuProgress *progress, GError **err
 
 	/* the user has to do something */
 	msg = g_strdup_printf("%s needs to be manually restarted to complete the update. "
-			      "Please unplug the dongle and then re-plug it.",
+			      "Please unplug the 2.4G USB Wireless adapter and then re-plug it.",
 			      fu_device_get_name(device));
 	request = fwupd_request_new();
 	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
@@ -708,7 +708,8 @@ fu_steelseries_sonic_prepare(FuDevice *device,
 
 		/* the user has to do something */
 		msg = g_strdup_printf("%s needs to be connected to start the update. "
-				      "Please press any button.",
+				      "Please put the switch button underneath to 2.4G, or "
+				      "click on any button to reconnect it.",
 				      fu_device_get_name(device));
 		request = fwupd_request_new();
 		fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
