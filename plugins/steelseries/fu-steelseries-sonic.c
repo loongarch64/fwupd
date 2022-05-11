@@ -749,75 +749,6 @@ fu_steelseries_sonic_prepare(FuDevice *device,
 	return TRUE;
 }
 
-static GBytes *
-fu_steelseries_sonic_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
-{
-	SteelseriesSonicChip chip;
-	gsize blobsz;
-	guint32 bufsz;
-	guint8 *buf;
-	g_autofree guint8 *blob = NULL;
-
-	blobsz = fu_device_get_firmware_size_max(FU_DEVICE(device));
-	blob = g_malloc0(blobsz);
-
-	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 18);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 8);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 73);
-
-	/* nordic */
-	chip = STEELSERIES_SONIC_CHIP_NORDIC;
-	buf = blob;
-	bufsz = STEELSERIES_SONIC_FIRMWARE_SIZE[chip];
-	if (!fu_steelseries_sonic_read_from_flash(device,
-						  chip,
-						  0x0,
-						  buf,
-						  bufsz,
-						  fu_progress_get_child(progress),
-						  error)) {
-		g_prefix_error(error, "failed to read from flash chip %u: ", chip);
-		return NULL;
-	}
-	fu_progress_step_done(progress);
-
-	/* holtek */
-	chip = STEELSERIES_SONIC_CHIP_HOLTEK;
-	buf += bufsz;
-	bufsz = STEELSERIES_SONIC_FIRMWARE_SIZE[chip];
-	if (!fu_steelseries_sonic_read_from_flash(device,
-						  chip,
-						  0x0,
-						  buf,
-						  bufsz,
-						  fu_progress_get_child(progress),
-						  error)) {
-		g_prefix_error(error, "failed to read from flash chip %u: ", chip);
-		return NULL;
-	}
-	fu_progress_step_done(progress);
-
-	/* mouse */
-	chip = STEELSERIES_SONIC_CHIP_MOUSE;
-	buf += bufsz;
-	bufsz = STEELSERIES_SONIC_FIRMWARE_SIZE[chip];
-	if (!fu_steelseries_sonic_read_from_flash(device,
-						  chip,
-						  0x0,
-						  buf,
-						  bufsz,
-						  fu_progress_get_child(progress),
-						  error)) {
-		g_prefix_error(error, "failed to read from flash chip %u: ", chip);
-		return NULL;
-	}
-	fu_progress_step_done(progress);
-
-	/* success */
-	return g_bytes_new_take(g_steal_pointer(&blob), blobsz);
-}
-
 static gboolean
 fu_steelseries_sonic_write_chip(FuDevice *device,
 				SteelseriesSonicChip chip,
@@ -1204,7 +1135,6 @@ fu_steelseries_sonic_class_init(FuSteelseriesSonicClass *klass)
 	klass_device->probe = fu_steelseries_sonic_probe;
 	klass_device->attach = fu_steelseries_sonic_attach;
 	klass_device->prepare = fu_steelseries_sonic_prepare;
-	klass_device->dump_firmware = fu_steelseries_sonic_dump_firmware;
 	klass_device->write_firmware = fu_steelseries_sonic_write_firmware;
 	klass_device->prepare_firmware = fu_steelseries_sonic_prepare_firmware;
 	klass_device->set_quirk_kv = fu_steelseries_sonic_set_quirk_kv;
