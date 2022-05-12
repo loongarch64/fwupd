@@ -997,6 +997,9 @@ fu_steelseries_sonic_prepare_firmware(FuDevice *device,
 				      GError **error)
 {
 	SteelseriesSonicChip chip;
+	g_autoptr(FuFirmware) firmware_nordic = NULL;
+	g_autoptr(FuFirmware) firmware_holtek = NULL;
+	g_autoptr(FuFirmware) firmware_mouse = NULL;
 	g_autoptr(FuFirmware) firmware_chip = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 
@@ -1012,6 +1015,7 @@ fu_steelseries_sonic_prepare_firmware(FuDevice *device,
 		return NULL;
 	if (!fu_steelseries_sonic_parse_firmware(firmware_chip, flags, error))
 		return FALSE;
+	firmware_mouse = g_steal_pointer(&firmware_chip);
 
 	/* nordic */
 	chip = STEELSERIES_SONIC_CHIP_NORDIC;
@@ -1021,6 +1025,7 @@ fu_steelseries_sonic_prepare_firmware(FuDevice *device,
 		return NULL;
 	if (!fu_steelseries_sonic_parse_firmware(firmware_chip, flags, error))
 		return FALSE;
+	firmware_nordic = g_steal_pointer(&firmware_chip);
 
 	/* holtek */
 	chip = STEELSERIES_SONIC_CHIP_HOLTEK;
@@ -1030,6 +1035,7 @@ fu_steelseries_sonic_prepare_firmware(FuDevice *device,
 		return NULL;
 	if (!fu_steelseries_sonic_parse_firmware(firmware_chip, flags, error))
 		return FALSE;
+	firmware_holtek = g_steal_pointer(&firmware_chip);
 
 	/* success */
 	return g_steal_pointer(&firmware);
