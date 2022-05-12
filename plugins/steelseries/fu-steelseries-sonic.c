@@ -730,10 +730,7 @@ fu_steelseries_sonic_prepare(FuDevice *device,
 			 g_timer_elapsed(timer, NULL) * 1000.f <
 			     FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
 		if (wl_status != STEELSERIES_SONIC_WIRELESS_STATE_CONNECTED) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_NEEDS_USER_ACTION,
-					    fu_device_get_update_message(device));
+			g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NEEDS_USER_ACTION, msg);
 			return FALSE;
 		}
 	}
