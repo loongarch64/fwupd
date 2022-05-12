@@ -39,8 +39,8 @@ The device is not upgradable and thus requires no vendor ID set.
 
 ### Wireless Mice
 
-The mouse switch button underneath must be set to 2.4G, and its 2.4GHz wireless
-USB adapter must be connected to host.
+The mouse switch button underneath must be set to 2.4G, and its 2.4G USB
+Wireless adapter must be connected to host.
 
 ## Vendor ID Security
 
