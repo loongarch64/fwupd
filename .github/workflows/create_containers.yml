@@ -1,10 +1,10 @@
 name: Create containers
 on:
-#  workflow_dispatch:
-#  schedule:
-#    - cron:  '0 0 * * *'
+  #  workflow_dispatch:
+  #  schedule:
+  #    - cron:  '0 0 * * *'
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: read
@@ -17,7 +17,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [precommit, fedora, debian-x86_64, arch, debian-i386, ubuntu-x86_64, centos, debian-loong64]
+        os:
+          [
+            precommit,
+            fedora,
+            debian-x86_64,
+            arch,
+            debian-i386,
+            ubuntu-x86_64,
+            centos,
+            debian-loong64,
+          ]
 
     steps:
       - name: Check out the repo
@@ -28,8 +38,7 @@ jobs:
         env:
           OS: ${{ matrix.os }}
         run: ./contrib/ci/generate_docker.py
-      -
-        name: Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
       - name: Login to GitHub Container Registry
         uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
@@ -41,5 +50,5 @@ jobs:
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           context: .
-          push: true
+          push: false
           tags: ghcr.io/fwupd/fwupd/fwupd-${{matrix.os}}:latest
