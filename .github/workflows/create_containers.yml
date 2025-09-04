@@ -15,11 +15,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [precommit, fedora, debian-x86_64, arch, debian-i386, ubuntu-x86_64, centos]
+        os: [precommit, fedora, debian-x86_64, arch, debian-i386, ubuntu-x86_64, centos, debian-loong64]
 
     steps:
       - name: Check out the repo
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
       - name: "Generate Dockerfile"
         env:
           OS: ${{ matrix.os }}
